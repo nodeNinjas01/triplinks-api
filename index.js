@@ -180,21 +180,21 @@ app.get('/get-tickets', async (req, res) => {
       },
     });
 
-    let data;
+    let userMessages;
     if (response.status.code === 200) {
-        const userMessages = await Promise.all(
+        userMessages = await Promise.all(
           response.records.map(async (record) => {
-             data = await record.data.json();
-            // return {
-            //   ...data,
-            //   recordId: record.id,
-            // };
+            const data = await record.data.json();
+            return {
+              ...data,
+              recordId: record.id,
+            };
           })
         );
     }
     res.status(200).json({
         success: true,
-        response
+        userMessages
 
     });
 
