@@ -15,7 +15,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 // const { web5, did: lizzyDid } = await Web5.connect();
 
 
-const { web5, did: lizzyDid } = await Web5.connect();
+const { web5, did } = await Web5.connect({sync: '5s'})
 
 
 // console.log(connection);
@@ -32,7 +32,32 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
-  // console.log('this is where we install local protocol')
+
+  //  console.log('this is in query local protocol')
+  const queryLocalProtocol = async (web5) => {
+    return await web5.dwn.protocols.query({
+      message: {
+        filter: {
+          protocol: 'https://airrove/tickets',
+        },
+      },
+    });
+  };
+
+
+    //console.log('this is where Query remote protocol is')
+    const queryRemoteProtocol = async (web5, did) => {
+        return await web5.dwn.protocols.query({
+          from: did,
+          message: {
+            filter: {
+              protocol: 'https://airrove/tickets',
+            },
+          },
+        });
+      };
+
+// console.log('this is where we install local protocol')
 const installLocalProtocol = async (web5, protocolDefinition) => {
     return await web5.dwn.protocols.configure({
       message: {
@@ -53,7 +78,7 @@ const installRemoteProtocol = async (web5, did, protocolDefinition) => {
 
 const defineNewProtocol = () => {
   return {
-    protocol: 'https://dwn.tbddev.org/dwn3',
+    protocol: 'https://airrove/tickets',
     published: true,
     types: {
       publishedTickets: {
@@ -61,7 +86,7 @@ const defineNewProtocol = () => {
         dataFormats: ['application/json'],
       },
       userTickets: {
-        schema: 'https://schema.org/userTickets',
+        schema: 'https://schema.org/travel',
         dataFormats: ['application/json'],
       },
     },
@@ -103,15 +128,17 @@ const configureProtocol = async (web5, did) => {
   }
 };
 
-const testData = {
-    date: '2024',
-    did: lizzyDid,
-    airline: 'Jamil-airline',
-    seatnumber: 'a-5',
-    amount: '20',
-    amount_in_btc: '0.006',
-    payer_address: '0x9994949494949'
-  }
+configureProtocol(web5, did);
+
+// const testData = {
+//     date: '2024',
+//     did,
+//     airline: 'Jamil-airline',
+//     seatnumber: 'a-5',
+//     amount: '20',
+//     amount_in_btc: '0.006',
+//     payer_address: '0x9994949494949'
+//   }
 
 app.post('/publish-ticket', async (req, res) => {
 //   const { from } = req.body;
@@ -120,13 +147,13 @@ app.post('/publish-ticket', async (req, res) => {
   const publishTicketProtocol = defineNewProtocol();
   try {
     const { record } = await web5.dwn.records.create({
-      data: testData,
+      data: req.body,
 
       message: {
         protocol: publishTicketProtocol.protocol,
         protocolPath: 'publishedTickets',
         dataFormat: 'application/json',
-        // schema: publishTicketProtocol.types.publishedTickets.schema,
+        schema: publishTicketProtocol.types.publishedTickets.schema,
       },
     });
 
@@ -144,17 +171,33 @@ app.post('/publish-ticket', async (req, res) => {
 app.get('/get-tickets', async (req, res) => {
   try {
     const response = await web5.dwn.records.query({
-      from: lizzyDid,
+      from: did,
       message: {
         filter: {
-          protocol: 'https://dwn.tbddev.org/dwn3',
+          protocol: 'https://airrove/tickets',
         //   schema: 'https://example.com/directMessageSchema',
         },
       },
     });
+
+    let data;
+    if (response.status.code === 200) {
+        const userMessages = await Promise.all(
+          response.records.map(async (record) => {
+             data = await record.data.json();
+            // return {
+            //   ...data,
+            //   recordId: record.id,
+            // };
+          })
+        );
+    }
     res.status(200).json({
+        success: true,
         response
-    })
+
+    });
+
   } catch (error) {
     console.log(error);
   }
