@@ -15,7 +15,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 // const { web5, did: lizzyDid } = await Web5.connect();
 
 
-const { web5, did } = await Web5.connect({sync: '5s'})
+export const { web5, did } = await Web5.connect({sync: '5s'})
 
 
 // console.log(connection);
@@ -76,7 +76,7 @@ const installRemoteProtocol = async (web5, did, protocolDefinition) => {
   return await protocol.send(did);
 };
 
-const defineNewProtocol = () => {
+export const defineNewProtocol = () => {
   return {
     protocol: 'https://airrove/tickets',
     published: true,
@@ -130,87 +130,9 @@ const configureProtocol = async (web5, did) => {
 
 configureProtocol(web5, did);
 
-// const testData = {
-//     date: '2024',
-//     did,
-//     airline: 'Jamil-airline',
-//     seatnumber: 'a-5',
-//     amount: '20',
-//     amount_in_btc: '0.006',
-//     payer_address: '0x9994949494949'
-//   }
+import routes from './ticket.router.js'
 
-app.post('/publish-ticket', async (req, res) => {
-//   const { from } = req.body;
-// console.log(req.body);
-
-  const publishTicketProtocol = defineNewProtocol();
-  try {
-    const { record } = await web5.dwn.records.create({
-      data: req.body,
-
-      message: {
-        protocol: publishTicketProtocol.protocol,
-        protocolPath: 'publishedTickets',
-        dataFormat: 'application/json',
-        schema: publishTicketProtocol.types.publishedTickets.schema,
-      },
-    });
-
-    let readResult = await record.data.json();
-    res.status(200).json({
-      success: true,
-      data: readResult,
-    });
-    console.log('Tickets published successfully');
-  } catch (error) {
-    console.log("Couldn't write record: " + error);
-  }
-});
-
-app.get('/get-tickets', async (req, res) => {
-  try {
-    const response = await web5.dwn.records.query({
-      from: did,
-      message: {
-        filter: {
-          protocol: 'https://airrove/tickets',
-        //   schema: 'https://example.com/directMessageSchema',
-        },
-      },
-    });
-
-    let userMessages;
-    if (response.status.code === 200) {
-        userMessages = await Promise.all(
-          response.records.map(async (record) => {
-            const data = await record.data.json();
-            return {
-              ...data,
-              recordId: record.id,
-            };
-          })
-        );
-    }
-    res.status(200).json({
-        success: true,
-        userMessages
-
-    });
-
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-// const updateResult = await record.update({
-//   data: 'We are in the web5',
-// });
-
-// const deleteResult = await record.delete();
-
-// const readResult = await record.data.text();
-// console.log(readResult);
+app.use('/api/', routes);
 
 const PORT = 5000
 const server = app.listen(PORT, () => {
