@@ -128,7 +128,7 @@ const configureProtocol = async (web5, did) => {
   }
 };
 
-configureProtocol(web5, did);
+await configureProtocol(web5, did);
 
 import routes from './ticket.router.js'
 
@@ -142,5 +142,5 @@ const server = app.listen(PORT, () => {
   //Handle unhandled rejections
   process.on('unhandledRejection', (err, promise) => {
     console.log(`Error: ${err.message}`);
-    server.close(() => process.exit(1).red);
+    server.close(() => process.exit(1));
   });
