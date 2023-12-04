@@ -15,7 +15,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 // const { web5, did: lizzyDid } = await Web5.connect();
 
 
-const { web5, did } = await Web5.connect({sync: '5s'})
+const { web5, did } = await Web5.connect({ sync: '5s' })
 
 
 // console.log(connection);
@@ -33,38 +33,38 @@ app.use(bodyParser.json());
 
 
 
-  //  console.log('this is in query local protocol')
-  const queryLocalProtocol = async (web5) => {
-    return await web5.dwn.protocols.query({
-      message: {
-        filter: {
-          protocol: 'https://airrove/tickets',
-        },
+//  console.log('this is in query local protocol')
+const queryLocalProtocol = async (web5) => {
+  return await web5.dwn.protocols.query({
+    message: {
+      filter: {
+        protocol: 'https://airrove/tickets',
       },
-    });
-  };
+    },
+  });
+};
 
 
-    //console.log('this is where Query remote protocol is')
-    const queryRemoteProtocol = async (web5, did) => {
-        return await web5.dwn.protocols.query({
-          from: did,
-          message: {
-            filter: {
-              protocol: 'https://airrove/tickets',
-            },
-          },
-        });
-      };
+//console.log('this is where Query remote protocol is')
+const queryRemoteProtocol = async (web5, did) => {
+  return await web5.dwn.protocols.query({
+    from: did,
+    message: {
+      filter: {
+        protocol: 'https://airrove/tickets',
+      },
+    },
+  });
+};
 
 // console.log('this is where we install local protocol')
 const installLocalProtocol = async (web5, protocolDefinition) => {
-    return await web5.dwn.protocols.configure({
-      message: {
-        definition: protocolDefinition,
-      },
-    });
-  };
+  return await web5.dwn.protocols.configure({
+    message: {
+      definition: protocolDefinition,
+    },
+  });
+};
 
 //  console.log('this is where we install remote protocol')
 const installRemoteProtocol = async (web5, did, protocolDefinition) => {
@@ -141,8 +141,8 @@ configureProtocol(web5, did);
 //   }
 
 app.post('/publish-ticket', async (req, res) => {
-//   const { from } = req.body;
-// console.log(req.body);
+  //   const { from } = req.body;
+  // console.log(req.body);
 
   const publishTicketProtocol = defineNewProtocol();
   try {
@@ -174,27 +174,27 @@ app.get('/get-tickets', async (req, res) => {
       from: did,
       message: {
         filter: {
-          protocol: 'https://airrove/tickets',
-        //   schema: 'https://example.com/directMessageSchema',
+          protocol: 'https://airove/tickets',
+          //   schema: 'https://example.com/directMessageSchema',
         },
       },
     });
 
     let userMessages;
     if (response.status.code === 200) {
-        userMessages = await Promise.all(
-          response.records.map(async (record) => {
-            const data = await record.data.json();
-            return {
-              ...data,
-              recordId: record.id,
-            };
-          })
-        );
+      userMessages = await Promise.all(
+        response.records.map(async (record) => {
+          const data = await record.data.json();
+          return {
+            ...data,
+            recordId: record.id,
+          };
+        })
+      );
     }
     res.status(200).json({
-        success: true,
-        userMessages
+      success: true,
+      userMessages
 
     });
 
@@ -215,10 +215,10 @@ app.get('/get-tickets', async (req, res) => {
 const PORT = 5000
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  });
+});
 
-  //Handle unhandled rejections
-  process.on('unhandledRejection', (err, promise) => {
-    console.log(`Error: ${err.message}`);
-    server.close(() => process.exit(1).red);
-  });
+//Handle unhandled rejections
+process.on('unhandledRejection', (err, promise) => {
+  console.log(`Error: ${err.message}`);
+  server.close(() => process.exit(1).red);
+});
