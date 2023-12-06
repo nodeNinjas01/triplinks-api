@@ -1,0 +1,1 @@
+export const nowPaymentUrl = "https://api.nowpayments.io/v1/payment"
