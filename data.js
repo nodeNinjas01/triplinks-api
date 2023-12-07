@@ -1,0 +1,2 @@
+let myArray = []
+export { myArray }
