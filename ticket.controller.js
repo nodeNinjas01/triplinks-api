@@ -94,7 +94,7 @@ export const updateTicket = async (req, res) => {
 
 /**
  * @desc    Get all airline tickets
- * @route   GET /api/v1/get-tickets
+ * @route   GET /api/get-tickets
  * @access  Public
  */
 

@@ -16,6 +16,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
 
 export const { web5, did } = await Web5.connect({sync: '5s'})
+console.log(did);
 
 
 // console.log(connection);
@@ -82,7 +83,7 @@ export const defineNewProtocol = () => {
     published: true,
     types: {
       publishedTickets: {
-        schema: 'https://schema.org/travel',
+        schema: 'https://schema.org/travelAction',
         dataFormats: ['application/json'],
       },
       userTickets: {
