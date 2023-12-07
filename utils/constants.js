@@ -1,0 +1,1 @@
+export const nowPaymentUrl = "https://api-sandbox.nowpayments.io/v1/payment"

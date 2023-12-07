@@ -1,12 +1,16 @@
-import { defineNewProtocol } from './index.js';
-import { web5, did } from './index.js';
-
+import { defineNewProtocol } from '../index.js';
+import { web5, did } from '../index.js';
+import { generatePaymentAddress, nowPaymentWebhook } from './payment.controller.js';
+import { signTicketVerifiableCredential } from './verifiable.credentials.js';
+import fs from 'fs'
+import { myArray } from '../data.js';
 /**
  * @desc    Publish a new airline ticket
  * @route   GET /api/v1/publish-ticket
  * @access  Private
  */
 export const publishTicket = async (req, res) => {
+
   const publishTicketProtocol = defineNewProtocol();
   try {
     const { record } = await web5.dwn.records.create({
@@ -16,6 +20,7 @@ export const publishTicket = async (req, res) => {
         protocolPath: 'publishedTickets',
         dataFormat: 'application/json',
         schema: publishTicketProtocol.types.publishedTickets.schema,
+        published: true
       },
     });
 
@@ -205,7 +210,7 @@ export const getTicketParam = async (req, res) => {
         if (
           (ticket.leaving == leaving &&
             ticket.arriving == arriving) &&
-            (ticket.departureDate == departureDate || ticket.departureDate != "") 
+          (ticket.departureDate == departureDate || ticket.departureDate != "")
           && (ticket.arrivalDate == arrivalDate || ticket.arrivalDate != "")
         ) {
           return ticket;
@@ -258,3 +263,64 @@ export const deleteTicket = async (req, res) => {
     console.error('Error in deleteMessage:', error);
   }
 };
+
+
+
+
+export const generateWallet = async (req, res) => {
+  try {
+    const { price_amount, customer_did } = req.body;
+    const response = await generatePaymentAddress(price_amount)
+    //Prepare data that will be written to data.json
+    const data = {
+      customer_did: customer_did,
+      wallet_address: response.pay_address,
+      ticket_data: req.body
+    }
+
+
+    // Read the existing array from the file
+    const filePath = 'data.js';
+    // Modify the array (add a new item, for example)
+    myArray.push(data);
+
+    // Convert the modified array back to a JavaScript code string
+    const arrayCode = `module.exports = ${JSON.stringify(myArray, null, 2)};`;
+
+    // Write the updated array code back to the file
+    fs.writeFile(filePath, arrayCode, 'utf-8', (err) => {
+      if (err) {
+        console.error('Error writing to file:', err);
+      } else {
+        console.log('Array has been updated in', filePath);
+      }
+    });
+
+
+    return res.status(200).json({ 'status': 'success', 'wallet': response })
+
+  } catch (error) {
+    res.status(400).json({ 'status': 'failed', 'error': error })
+  }
+
+}
+export const indexFuction = async (req, res) => {
+  return await res.status(200).json({ "data": "Airove - API" })
+
+}
+
+
+
+export const nowPaymentWebhookFunction = async (req, res) => {
+  const data = req.body
+  const headers = req.headers
+  // const { customer }
+  try {
+    const vc = await nowPaymentWebhook(data, headers, did)
+    return res.status(200).json({ 'vc': vc })
+  } catch (error) {
+    res.status(200).json({ 'vc': 'error' })
+
+  }
+
+}

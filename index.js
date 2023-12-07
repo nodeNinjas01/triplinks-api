@@ -15,8 +15,8 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 // const { web5, did: lizzyDid } = await Web5.connect();
 
 
-export const { web5, did } = await Web5.connect({sync: '5s'})
-console.log(did);
+export const { web5, did } = await Web5.connect({ sync: '5s' })
+
 
 
 // console.log(connection);
@@ -34,38 +34,38 @@ app.use(bodyParser.json());
 
 
 
-  //  console.log('this is in query local protocol')
-  const queryLocalProtocol = async (web5) => {
-    return await web5.dwn.protocols.query({
-      message: {
-        filter: {
-          protocol: 'https://airrove/tickets',
-        },
+//  console.log('this is in query local protocol')
+const queryLocalProtocol = async (web5) => {
+  return await web5.dwn.protocols.query({
+    message: {
+      filter: {
+        protocol: 'https://airrove/tickets',
       },
-    });
-  };
+    },
+  });
+};
 
 
-    //console.log('this is where Query remote protocol is')
-    const queryRemoteProtocol = async (web5, did) => {
-        return await web5.dwn.protocols.query({
-          from: did,
-          message: {
-            filter: {
-              protocol: 'https://airrove/tickets',
-            },
-          },
-        });
-      };
+//console.log('this is where Query remote protocol is')
+const queryRemoteProtocol = async (web5, did) => {
+  return await web5.dwn.protocols.query({
+    from: did,
+    message: {
+      filter: {
+        protocol: 'https://airrove/tickets',
+      },
+    },
+  });
+};
 
 // console.log('this is where we install local protocol')
 const installLocalProtocol = async (web5, protocolDefinition) => {
-    return await web5.dwn.protocols.configure({
-      message: {
-        definition: protocolDefinition,
-      },
-    });
-  };
+  return await web5.dwn.protocols.configure({
+    message: {
+      definition: protocolDefinition,
+    },
+  });
+};
 
 //  console.log('this is where we install remote protocol')
 const installRemoteProtocol = async (web5, did, protocolDefinition) => {
@@ -131,14 +131,14 @@ const configureProtocol = async (web5, did) => {
 
 await configureProtocol(web5, did);
 
-import routes from './ticket.router.js'
+import routes from './routes/ticket.router.js'
 
 app.use('/api/', routes);
 
 const PORT = 5000
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  });
+});
 
   //Handle unhandled rejections
   process.on('unhandledRejection', (err, promise) => {
