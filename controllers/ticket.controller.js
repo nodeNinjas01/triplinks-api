@@ -1,16 +1,23 @@
 import { defineNewProtocol } from '../index.js';
 import { web5, did } from '../index.js';
-import { generatePaymentAddress, nowPaymentWebhook } from './payment.controller.js';
+import { DidKeyMethod } from "@web5/dids";
+import {
+  generatePaymentAddress,
+  nowPaymentWebhook,
+} from './payment.controller.js';
 import { signTicketVerifiableCredential } from './verifiable.credentials.js';
-import fs from 'fs'
+import fs from 'fs';
 import { myArray } from '../data.js';
+
+const appDid =
+  'did:ion:EiDVI-n7FjNAr9pHWnqSIJe_i9QzNWo3dvXycWgEA_5jXg:eyJkZWx0YSI6eyJwYXRjaGVzIjpbeyJhY3Rpb24iOiJyZXBsYWNlIiwiZG9jdW1lbnQiOnsicHVibGljS2V5cyI6W3siaWQiOiJkd24tc2lnIiwicHVibGljS2V5SndrIjp7ImNydiI6IkVkMjU1MTkiLCJrdHkiOiJPS1AiLCJ4Ijoicm5Qb1BRRG1RemowbDROd2Q0TEwtSzByQ0kwVml5ZnVsOVMzOFZkU1dyTSJ9LCJwdXJwb3NlcyI6WyJhdXRoZW50aWNhdGlvbiJdLCJ0eXBlIjoiSnNvbldlYktleTIwMjAifSx7ImlkIjoiZHduLWVuYyIsInB1YmxpY0tleUp3ayI6eyJjcnYiOiJzZWNwMjU2azEiLCJrdHkiOiJFQyIsIngiOiI1WlBUNE8wZXNNX0d2MVZSMTdUeHNuVzc2VlNNRk9hUXQ2UjB1UHJKQWRBIiwieSI6ImxLbDZsLWZLLUtHSXl1c0VXVkxGcTEzTmk0RjRlWWlvUm9VNEdGREtwdTQifSwicHVycG9zZXMiOlsia2V5QWdyZWVtZW50Il0sInR5cGUiOiJKc29uV2ViS2V5MjAyMCJ9XSwic2VydmljZXMiOlt7ImlkIjoiZHduIiwic2VydmljZUVuZHBvaW50Ijp7ImVuY3J5cHRpb25LZXlzIjpbIiNkd24tZW5jIl0sIm5vZGVzIjpbImh0dHBzOi8vZHduLnRiZGRldi5vcmcvZHduMSIsImh0dHBzOi8vZHduLnRiZGRldi5vcmcvZHduMyJdLCJzaWduaW5nS2V5cyI6WyIjZHduLXNpZyJdfSwidHlwZSI6IkRlY2VudHJhbGl6ZWRXZWJOb2RlIn1dfX1dLCJ1cGRhdGVDb21taXRtZW50IjoiRWlENlZ3T3dtRTg3Q21KU0tCTHV0MGVUWFpLajBaZ0h2a0VEa2Y5ekh3S191USJ9LCJzdWZmaXhEYXRhIjp7ImRlbHRhSGFzaCI6IkVpRG9tQTF2bVVmSk1fRGtsQkpNZ3dDakVkeTRud2VZZ1hRb1Via1Zhb0dYUEEiLCJyZWNvdmVyeUNvbW1pdG1lbnQiOiJFaUM0NjNzTWhwUFBjLWttU2Q1RjRTYU1maE4yYXhOX1VCczJwaHlIanhPS3ZBIn19';
+
 /**
  * @desc    Publish a new airline ticket
  * @route   GET /api/v1/publish-ticket
  * @access  Private
  */
 export const publishTicket = async (req, res) => {
-
   const publishTicketProtocol = defineNewProtocol();
   try {
     const { record } = await web5.dwn.records.create({
@@ -20,7 +27,7 @@ export const publishTicket = async (req, res) => {
         protocolPath: 'publishedTickets',
         dataFormat: 'application/json',
         schema: publishTicketProtocol.types.publishedTickets.schema,
-        published: true
+        published: true,
       },
     });
 
@@ -114,23 +121,27 @@ export const getTickets = async (req, res) => {
         },
       },
     });
+    
 
     let userTickets;
     if (response.status.code === 200) {
       userTickets = await Promise.all(
         response.records.map(async (record) => {
           const data = await record.data.json();
-          return {
-            ...data,
-            recordId: record.id,
-            did,
-          };
+          console.log(data);
+          if (data) {
+            return {
+              ...data,
+              recordId: record.id,
+              did,
+            };
+          }
         })
       );
     }
     res.status(201).json({
       success: true,
-      userTickets,
+      response,
     });
   } catch (error) {
     console.log(error);
@@ -208,10 +219,11 @@ export const getTicketParam = async (req, res) => {
 
       const tickets = userTickets.filter((ticket) => {
         if (
-          (ticket.leaving == leaving &&
-            ticket.arriving == arriving) &&
-          (ticket.departureDate == departureDate || ticket.departureDate != "")
-          && (ticket.arrivalDate == arrivalDate || ticket.arrivalDate != "")
+          ticket.leaving == leaving &&
+          ticket.arriving == arriving &&
+          (ticket.departureDate == departureDate ||
+            ticket.departureDate != '') &&
+          (ticket.arrivalDate == arrivalDate || ticket.arrivalDate != '')
         ) {
           return ticket;
         }
@@ -264,20 +276,16 @@ export const deleteTicket = async (req, res) => {
   }
 };
 
-
-
-
 export const generateWallet = async (req, res) => {
   try {
     const { price_amount, customer_did } = req.body;
-    const response = await generatePaymentAddress(price_amount)
+    const response = await generatePaymentAddress(price_amount);
     //Prepare data that will be written to data.json
     const data = {
       customer_did: customer_did,
       wallet_address: response.pay_address,
-      ticket_data: req.body
-    }
-
+      ticket_data: req.body,
+    };
 
     // Read the existing array from the file
     const filePath = 'data.js';
@@ -296,31 +304,98 @@ export const generateWallet = async (req, res) => {
       }
     });
 
-
-    return res.status(200).json({ 'status': 'success', 'wallet': response })
-
+    return res.status(200).json({ status: 'success', wallet: response });
   } catch (error) {
-    res.status(400).json({ 'status': 'failed', 'error': error })
+    res.status(400).json({ status: 'failed', error: error });
   }
-
-}
+};
 export const indexFuction = async (req, res) => {
-  return await res.status(200).json({ "data": "Airove - API" })
-
-}
-
-
+  return await res.status(200).json({ data: 'Airove - API' });
+};
 
 export const nowPaymentWebhookFunction = async (req, res) => {
-  const data = req.body
-  const headers = req.headers
+  const data = req.body;
+  const headers = req.headers;
   // const { customer }
   try {
-    const vc = await nowPaymentWebhook(data, headers, did)
-    return res.status(200).json({ 'vc': vc })
+    const vc = await nowPaymentWebhook(data, headers, did);
+    return res.status(200).json({ vc: vc });
   } catch (error) {
-    res.status(200).json({ 'vc': 'error' })
-
+    res.status(200).json({ vc: 'error' });
   }
+};
 
-}
+/**
+ * @desc    Publish a new airline ticket
+ * @route   GET /api/v1/publish-ticket
+ * @access  Private
+ */
+export const login = async (req, res) => {
+  const { phoneNumber, passPhrase } = req.body;
+
+  try {
+    const response = await web5.dwn.records.query({
+      from: did,
+      message: {
+        filter: {
+          protocol: 'https://airrove/tickets',
+          protocolPath: 'userTickets',
+        },
+      },
+    });
+    // console.log(response);
+    let user;
+    let data;
+    if (response.status.code === 200 && response.records.length > 0) {
+      console.log(response.status.code);
+      user = await Promise.all(
+        response.records.map(async (record) => {
+          data = await record.data.json();
+          console.log(record);
+          if (data) {
+            return {
+              ...data,
+              recordId: record.id,
+              did,
+            };
+          }
+        })
+      );
+    }else {
+      console.log("user not found");
+    }
+
+    if (!user) {
+      const userDid = await DidKeyMethod.create();
+      const userProtocol = defineNewProtocol();
+      try {
+        const { record } = await web5.dwn.records.create({
+          data: {
+            phoneNumber: phoneNumber,
+            passphrase: passPhrase,
+            did: userDid.did,
+          },
+          message: {
+            protocol: userProtocol.protocol,
+            protocolPath: 'userTickets',
+            dataFormat: 'application/json',
+            schema: userProtocol.types.publishedTickets.schema,
+            recipient: appDid,
+          },
+        });
+
+        data = await record.data.json();
+        console.log('User created successfully');
+      } catch (error) {
+        console.log("Couldn't write record: " + error);
+      }    
+    }
+
+    res.status(201).json({
+      success: true,
+      user: user ? user : data 
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};

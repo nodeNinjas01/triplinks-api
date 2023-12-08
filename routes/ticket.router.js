@@ -9,7 +9,8 @@ import {
     getOneTicket,
     deleteTicket,
     indexFuction,
-    nowPaymentWebhookFunction
+    nowPaymentWebhookFunction,
+    login
 } from '../controllers/ticket.controller.js';
 import { generateWallet } from '../controllers/ticket.controller.js';
 
@@ -19,6 +20,7 @@ router.get('/getticket/:id', getOneTicket);
 router.put('/update-ticket/:id', updateTicket);
 router.delete('/delete-ticket/:id', deleteTicket);
 router.post('/get-ticket-param', getTicketParam);
+router.post('/login', login);
 router.get('', indexFuction);
 router.post('/generate-wallet', generateWallet);
 router.post('/webhookurl', nowPaymentWebhookFunction);

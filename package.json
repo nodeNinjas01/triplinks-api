@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/nodeNinjas01/triplinks-api#readme",
   "dependencies": {
-    "@web5/api": "^0.8.2",
+    "@web5/api": "^0.8.3",
     "@web5/credentials": "^0.3.2",
     "@web5/crypto": "^0.2.3",
     "axios": "^1.6.2",
