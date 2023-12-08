@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { Web5 } from '@web5/api';
+import errorHandler from './utils/error.js';
 
 /*
 Needs globalThis.crypto polyfill. 
@@ -129,8 +130,10 @@ await configureProtocol(web5, did);
 
 import routes from './routes/ticket.router.js';
 
+
 app.use('/api/', routes);
 
+app.use(errorHandler)
 const PORT = 5000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
