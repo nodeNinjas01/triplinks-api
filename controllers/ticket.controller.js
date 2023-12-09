@@ -22,23 +22,27 @@ export const publishTicket = async (req, res, next) => {
   const publishTicketProtocol = defineNewProtocol();
   try {
     const {
-      leaving,
-      arriving,
+      departureState,
+      arrivalState,
       departureDate,
-      arrivalDate,
-      buisinessPrice,
+      businessPrice,
       economyPrice,
       firstClassPrice,
+      airlineName,
+      departureAirport,
+      arrivalAirport
     } = req.body;
     const { record } = await web5.dwn.records.create({
       data: {
-        leaving,
-        arriving,
+        departureState,
+        arrivalState,
+        airlineName,
         departureDate,
-        arrivalDate,
-        buisinessPrice,
+        businessPrice,
         economyPrice,
         firstClassPrice,
+        departureAirport,
+        arrivalAirport
       },
       message: {
         protocol: publishTicketProtocol.protocol,
@@ -55,7 +59,7 @@ export const publishTicket = async (req, res, next) => {
       data: readResult,
     });
   } catch (error) {
-    return next(new ErrorResponse("Couldn't write record: " + error));
+    return next(new ErrorResponse("Couldn't write record: " + error, 400));
   }
 };
 
@@ -68,19 +72,21 @@ export const updateTicket = async (req, res, next) => {
   const publishTicketProtocol = defineNewProtocol();
   try {
     const {
-      leaving,
-      arriving,
+      departureState,
+      arrivalState,
       departureDate,
-      arrivalDate,
-      buisinessPrice,
+      businessPrice,
       economyPrice,
       firstClassPrice,
+      airlineName,
+      departureAirport,
+      arrivalAirport
     } = req.body;
 
     const response = await web5.dwn.records.query({
       message: {
         filter: {
-          recordId: req.params.recordId,
+          recordId: req.params.id,
         },
       },
     });
@@ -89,18 +95,23 @@ export const updateTicket = async (req, res, next) => {
       const record = response.records[0];
       const updateResult = await record.update({
         data: {
-          leaving: leaving ? leaving : record.leaving,
-          arriving: arriving ? arriving : record.arriving,
+          departureState: departureState ? departureState : record.departureState,
+          arrivalState: arrivalState ? arrivalState : record.arrivalState,
           departureDate: departureDate ? departureDate : record.departureDate,
-          arrivalDate: arrivalDate ? arrivalDate : record.arrivalDate,
-          buisinessPrice: buisinessPrice
-            ? buisinessPrice
+          businessPrice: businessPrice
+            ? businessPrice
             : record.buisinessPrice,
           economyPrice: economyPrice ? economyPrice : record.economyPrice,
           firstClassPrice: firstClassPrice
             ? firstClassPrice
             : record.firstClassPrice,
+            airlineName: airlineName ? airlineName : record.airlineName,
+            departureAirport: departureAirport ? departureAirport : record.departureAirport,
+            arrivalAirport: arrivalAirport ? arrivalAirport : record.arrivalAirport
         },
+        // filter: {
+        //   recordId: createdRecord.id
+        // }
       });
 
       if (updateResult.status.code === 202) {
@@ -110,15 +121,15 @@ export const updateTicket = async (req, res, next) => {
           data: readResult,
         });
       } else {
-        return next(new ErrorResponse("Couldn't update record: " + error));
+        return next(new ErrorResponse("Couldn't update record: " + error, 400));
       }
     } else {
       return next(
-        new ErrorResponse('No record found with the specified ID' + error)
+        new ErrorResponse('No record found with the specified ID' + error, 404)
       );
     }
   } catch (error) {
-    return next(new ErrorResponse("Couldn't write record: " + error));
+    return next(new ErrorResponse("Couldn't write record: " + error, 400));
   }
 };
 
@@ -135,7 +146,7 @@ export const getTickets = async (req, res, next) => {
       message: {
         filter: {
           protocol: 'https://airrove/tickets',
-          // protocolPath: "publishedTickets"
+          protocolPath: "publishedTickets"
           //   schema: 'https://schema.org/travel-tickets',
         },
       },
@@ -161,7 +172,7 @@ export const getTickets = async (req, res, next) => {
       userTickets,
     });
   } catch (error) {
-    return next(new ErrorResponse('Error occurred ' + error));
+    return next(new ErrorResponse('Error occurred ' + error, 400));
   }
 };
 
@@ -201,13 +212,13 @@ export const getOneTicket = async (req, res, next) => {
       userTickets,
     });
   } catch (error) {
-    return next(new ErrorResponse('An error occurred ' + error));
+    return next(new ErrorResponse('An error occurred ' + error, 400));
   }
 };
 
 export const getTicketParam = async (req, res, next) => {
   try {
-    const { leaving, arriving, departureDate, arrivalDate } = req.body;
+    const { leaving, goingto, departureDate } = req.body;
 
     const response = await web5.dwn.records.query({
       from: did,
@@ -236,11 +247,10 @@ export const getTicketParam = async (req, res, next) => {
 
       const tickets = userTickets.filter((ticket) => {
         if (
-          ticket.leaving.toLowerCase() == leaving.toLowerCase() &&
-          ticket.arriving.toLowerCase() == arriving.toLowerCase() &&
+          ticket.departureState.toLowerCase() === leaving.toLowerCase() &&
+          ticket.arrivalState.toLowerCase() === goingto.toLowerCase() &&
           (ticket.departureDate == departureDate ||
-            ticket.departureDate != '') &&
-          (ticket.arrivalDate == arrivalDate || ticket.arrivalDate != '')
+            ticket.departureDate != '')
         ) {
           return ticket;
         }
@@ -252,7 +262,7 @@ export const getTicketParam = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(new ErrorResponse('An error occurred ' + error));
+    return next(new ErrorResponse('An error occurred ' + error, 400));
   }
 };
 
@@ -286,13 +296,13 @@ export const deleteTicket = async (req, res, next) => {
           data: [],
         });
       } else {
-        return next(new ErrorResponse('Error deleting message: ' + error));
+        return next(new ErrorResponse('Error deleting message: ' + error, 400));
       }
     } else {
-      return next(new ErrorResponse('No record found with the specified ID'));
+      return next(new ErrorResponse('No record found with the specified ID', 404));
     }
   } catch (error) {
-    return next(new ErrorResponse('Error in deleteMessage: ' + error));
+    return next(new ErrorResponse('Error in deleteMessage: ' + error, 500));
   }
 };
 
@@ -351,7 +361,7 @@ export const nowPaymentWebhookFunction = async (req, res) => {
  * @access  Private
  */
 export const login = async (req, res, next) => {
-  const { phoneNumber, passPhrase } = req.body;
+  const { phoneNumber, passphrase } = req.body;
 
   try {
     const response = await web5.dwn.records.query({
@@ -381,13 +391,12 @@ export const login = async (req, res, next) => {
           }
         })
       );
-
       if (user) {
         if (
-          user.phoneNumber !== phoneNumber ||
-          user.passphrase !== passPhrase
+          user[0].phoneNumber !== phoneNumber ||
+          user[0].passphrase !== passphrase
         ) {
-          return next(new ErrorResponse('wrong phone number or pass phrase '));
+          return next(new ErrorResponse('wrong phone number or pass phrase', 403));
         }
       }
     }
@@ -399,7 +408,7 @@ export const login = async (req, res, next) => {
         const { record, status } = await web5.dwn.records.create({
           data: {
             phoneNumber: phoneNumber,
-            passphrase: passPhrase,
+            passphrase: passphrase,
             did: userDid.did,
           },
           message: {
@@ -418,16 +427,16 @@ export const login = async (req, res, next) => {
 
         data = await record.data.json();
       } catch (error) {
-        return next(new ErrorResponse("Couldn't write record: " + error));
+        return next(new ErrorResponse("Couldn't write record: " + error, 400));
       }
     }
 
     res.status(201).json({
       success: true,
-      user: user ? user.phoneNumber : data.phoneNumber,
-      did: user ? user.did : data.did,
+      user: user ? user[0].phoneNumber : data.phoneNumber,
+      did: user ? user[0].did : data.did,
     });
   } catch (error) {
-    return next(new ErrorResponse(error));
+    return next(new ErrorResponse(error, 400));
   }
 };
