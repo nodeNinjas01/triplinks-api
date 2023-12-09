@@ -2,6 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { Web5 } from '@web5/api';
 import errorHandler from './utils/error.js';
+import cors from 'cors'
+
 
 /*
 Needs globalThis.crypto polyfill. 
@@ -23,6 +25,10 @@ export const { web5, did } = await Web5.connect({ sync: '5s' });
 // console.log(publicKey);
 
 const app = express();
+app.use(cors({
+  origin: '*'
+}))
+
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: false }));
