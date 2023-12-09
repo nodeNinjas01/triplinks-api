@@ -16,6 +16,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
 
 export const { web5, did } = await Web5.connect({ sync: '5s' })
+console.log(did);
 
 
 
