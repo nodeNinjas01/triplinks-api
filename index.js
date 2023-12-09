@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { Web5 } from '@web5/api';
+import errorHandler from './utils/error.js';
 
 /*
 Needs globalThis.crypto polyfill. 
@@ -14,11 +15,7 @@ import { read } from 'node:fs';
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 // const { web5, did: lizzyDid } = await Web5.connect();
 
-
-export const { web5, did } = await Web5.connect({ sync: '5s' })
-console.log(did);
-
-
+export const { web5, did } = await Web5.connect({ sync: '5s' });
 
 // console.log(connection);
 
@@ -34,7 +31,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
-
 //  console.log('this is in query local protocol')
 const queryLocalProtocol = async (web5) => {
   return await web5.dwn.protocols.query({
@@ -45,7 +41,6 @@ const queryLocalProtocol = async (web5) => {
     },
   });
 };
-
 
 //console.log('this is where Query remote protocol is')
 const queryRemoteProtocol = async (web5, did) => {
@@ -84,11 +79,11 @@ export const defineNewProtocol = () => {
     published: true,
     types: {
       publishedTickets: {
-        schema: 'https://schema.org/travel',
+        schema: 'https://schema.org/TravelAction',
         dataFormats: ['application/json'],
       },
       userTickets: {
-        schema: 'https://schema.org/travel',
+        schema: 'https://schema.org/TravelAction',
         dataFormats: ['application/json'],
       },
     },
@@ -102,6 +97,7 @@ export const defineNewProtocol = () => {
       userTickets: {
         $actions: [
           { who: 'author', of: 'userTickets', can: 'read' },
+          { who: 'recipient', of: 'userTickets', can: 'read' },
           { who: 'anyone', can: 'write' },
         ],
       },
@@ -130,13 +126,15 @@ const configureProtocol = async (web5, did) => {
   }
 };
 
-configureProtocol(web5, did);
+await configureProtocol(web5, did);
 
-import routes from './routes/ticket.router.js'
+import routes from './routes/ticket.router.js';
+
 
 app.use('/api/', routes);
 
-const PORT = 5000
+app.use(errorHandler)
+const PORT = 5000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
@@ -144,5 +142,5 @@ const server = app.listen(PORT, () => {
 //Handle unhandled rejections
 process.on('unhandledRejection', (err, promise) => {
   console.log(`Error: ${err.message}`);
-  server.close(() => process.exit(1).red);
+  server.close(() => process.exit(1));
 });
