@@ -82,11 +82,10 @@ export const nowPaymentWebhook = async (data, headers, did) => {
   console.log(myArray.length);
 
   // Check if the data.pay_adress is contained in myArray
-  for (var obj in myArray) {
-    if (obj?.wallet_adress == data?.pay_address) {
- 
+  myArray.map((e, index) => {
+    if (e?.wallet_adress == data?.pay_address) {
       if (JSON.stringify(headers)['x-nowpayments-sig']) {
-        const vc = await signTicketVerifiableCredential(did, obj.customer_did, obj)
+        const vc = signTicketVerifiableCredential(did, e?.customer_did, e)
         console.log(vc, 'THis is vc');
         return vc
 
@@ -95,6 +94,9 @@ export const nowPaymentWebhook = async (data, headers, did) => {
       }
 
     }
-  }
+
+
+  })
+
 
 }
