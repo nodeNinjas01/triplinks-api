@@ -1,4 +1,4 @@
-// import axios from "axios"
+import axios from "axios"
 import { nowPaymentUrl } from "../utils/constants.js"
 import dotenv from 'dotenv';
 import CryptoJS from "crypto-js";
@@ -28,14 +28,20 @@ export const generatePaymentAddress = async (amount) => {
   const body = addressRequestBody(amount)
   try {
     const res = await axios.post(nowPaymentUrl, JSON.stringify(body), { headers });
+    console.log(res.data);
     if (res.status == 201) {
-      return res.data
+      return {
+        status: true,
+        data: res.data
+      }
 
+    } else {
+      return { 'status': false };
     }
 
   } catch (error) {
     console.log(error, 'ERRORRRR')
-    return error;
+    return { 'status': false };
 
   }
 
