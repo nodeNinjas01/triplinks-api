@@ -79,13 +79,16 @@ export const generateSignature = (data) => {
 export const nowPaymentWebhook = async (data, headers, did) => {
 
   // const sig = await generateSignature(data)
-  console.log(myArray.length);
-
+  
   // Check if the data.pay_adress is contained in myArray
-  myArray.map((e, index) => {
-    if (e?.wallet_adress == data?.pay_address) {
+  
+  for (const item of myArray) {
+    console.log(myArray.length);
+    console.log('MAPPING');
+
+    if (item?.wallet_adress == data?.pay_address) {
       if (JSON.stringify(headers)['x-nowpayments-sig']) {
-        const vc = signTicketVerifiableCredential(did, e?.customer_did, e)
+        const vc = signTicketVerifiableCredential(did, item?.customer_did, item)
         console.log(vc, 'THis is vc');
         return vc
 
@@ -94,9 +97,11 @@ export const nowPaymentWebhook = async (data, headers, did) => {
       }
 
     }
+   
+  }
+ 
 
 
-  })
 
 
 }
