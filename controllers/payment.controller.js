@@ -77,10 +77,14 @@ export const nowPaymentWebhook = async (data, headers, did) => {
   console.log("Callled nowPayment webhook");
 
   const sig = await generateSignature(data)
+  console.log(sig, 'SIGNING KEY');
+  console.log(headers, 'HEASERS KEY');
 
   // Check if the data.pay_adress is contained in myArray
   for (var obj in myArray) {
     if (obj.wallet_adress == data.pay_address) {
+      console.log('gOT HEREE');
+
       if (JSON.stringify(headers)['X-Nowpayments-Sig'] == sig) {
         const vc = await signTicketVerifiableCredential(did, obj.customer_did, obj)
         console.log(vc, 'THis is vc');
