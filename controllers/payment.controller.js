@@ -74,6 +74,7 @@ export const generateSignature = async (data) => {
 // If the sigining key are same, then we can go ahead with siginging a vc for the user
 
 export const nowPaymentWebhook = async (data, headers, did) => {
+  console.log("Callled nowPayment webhook");
 
   const sig = await generateSignature(data)
 
@@ -82,6 +83,7 @@ export const nowPaymentWebhook = async (data, headers, did) => {
     if (obj.wallet_adress == data.pay_address) {
       if (JSON.stringify(headers)['X-Nowpayments-Sig'] == sig) {
         const vc = await signTicketVerifiableCredential(did, obj.customer_did, obj)
+        console.log(vc, 'THis is vc');
         return vc
 
       } else {
