@@ -86,8 +86,8 @@ export const nowPaymentWebhook = async (data, headers, did) => {
 
     if (item?.wallet_address == data?.pay_address) {
       console.log(myArray.length);
-      console.log('MAPPING');
-      if (JSON.stringify(headers)['x-nowpayments-sig']) {
+      if (JSON.stringify(headers['x-nowpayments-sig'])) {
+        console.log('MAPPING');
         const vc = signTicketVerifiableCredential(did, item?.customer_did, item)
         console.log(vc, 'THis is vc');
         return vc
