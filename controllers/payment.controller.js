@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import crypto from 'crypto'
 import { signTicketVerifiableCredential } from "./verifiable.credentials.js";
 import { myArray } from "../data.js";
+import { sendEmail } from "../utils/email_messaging.js";
 
 
 
@@ -87,9 +88,8 @@ export const nowPaymentWebhook = async (data, headers, did) => {
     if (item?.wallet_address == data?.pay_address) {
       console.log(myArray.length);
       if (JSON.stringify(headers['x-nowpayments-sig'])) {
-        console.log('MAPPING');
         const vc = await signTicketVerifiableCredential(did, item?.customer_did, item)
-        console.log(vc, 'THis is vc');
+        await sendEmail(item?.ticket_data?.email, vc)
         return vc
 
       } else {
