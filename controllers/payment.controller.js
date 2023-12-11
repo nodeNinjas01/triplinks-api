@@ -1,11 +1,12 @@
 import axios from "axios"
 import { nowPaymentUrl } from "../utils/constants.js"
 import dotenv from 'dotenv';
-
+import crypto from 'crypto'
 import { signTicketVerifiableCredential } from "./verifiable.credentials.js";
 import { myArray } from "../data.js";
 
-const crypto = require('crypto')
+
+
 
 dotenv.config();
 
