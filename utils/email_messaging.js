@@ -18,8 +18,8 @@ export const sendEmail = async (receiver, vc) => {
     to: receiver,
     subject: "Ticket purchase",
     text: vc,
-    html: `<b>Hello ${receiver}</b>`
+    html: `<b>Hello,  ${receiver} your ticket purchase was succesful</b><br></br> Here is your Verifiable Credential: ${vc}`
   })
-  console.log('mess sent to', receiver);
+  console.log('message sent to', receiver);
   return message.messageId
 }
