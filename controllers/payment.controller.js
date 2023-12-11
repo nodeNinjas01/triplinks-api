@@ -53,19 +53,18 @@ export const generatePaymentAddress = async (amount) => {
 //For Verifying webhooks
 
 export const generateSignature = async (data) => {
-  // Convert the IPN secret key to a Buffer
-  const secretKey = Buffer.from(process.env.IPN_SECRET_KEY, 'utf-8');
+  // Convert the IPN secret key to a WordArray
+  const secretKey = CryptoJS.enc.Utf8.parse(process.env.IPN_SECRET_KEY);
 
   // Sort the data dictionary by keys and convert to a JSON string
   const sortedData = JSON.stringify(data, Object.keys(data).sort(), 2);
 
   // Calculate the HMAC-SHA512 signature
-  const hmac = CryptoJS.createHmac('sha512', secretKey);
-  hmac.
-    hmac.update(sortedData, 'utf-8');
-  const signature = hmac.digest('hex');
+  const hmac = CryptoJS.HmacSHA512(sortedData, secretKey);
+  const signature = CryptoJS.enc.Hex.stringify(hmac);
 
   return signature;
+
 }
 
 
@@ -86,7 +85,7 @@ export const nowPaymentWebhook = async (data, headers, did) => {
     if (obj.wallet_adress == data.pay_address) {
       console.log('gOT HEREE');
 
-      if (JSON.stringify(headers)['X-Nowpayments-Sig'] == sig) {
+      if (JSON.stringify(headers)['x-nowpayments-sig'] == sig) {
         const vc = await signTicketVerifiableCredential(did, obj.customer_did, obj)
         console.log(vc, 'THis is vc');
         return vc
