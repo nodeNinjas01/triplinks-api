@@ -75,6 +75,7 @@ export const generateSignature = async (data) => {
 
 export const nowPaymentWebhook = async (data, headers, did) => {
   console.log("Callled nowPayment webhook");
+  console.log(data, headers, 'DATA');
 
   const sig = await generateSignature(data)
   console.log(sig, 'SIGNING KEY');
