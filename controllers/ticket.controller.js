@@ -104,9 +104,9 @@ export const updateTicket = async (req, res, next) => {
           firstClassPrice: firstClassPrice
             ? firstClassPrice
             : record.firstClassPrice,
-            airlineName: airlineName ? airlineName : record.airlineName,
-            departureAirport: departureAirport ? departureAirport : record.departureAirport,
-            arrivalAirport: arrivalAirport ? arrivalAirport : record.arrivalAirport
+          airlineName: airlineName ? airlineName : record.airlineName,
+          departureAirport: departureAirport ? departureAirport : record.departureAirport,
+          arrivalAirport: arrivalAirport ? arrivalAirport : record.arrivalAirport
         },
         // filter: {
         //   recordId: createdRecord.id
@@ -310,30 +310,37 @@ export const generateWallet = async (req, res) => {
     const { price_amount, customer_did } = req.body;
     const response = await generatePaymentAddress(price_amount);
     //Prepare data that will be written to data.json
-    const data = {
-      customer_did: customer_did,
-      wallet_address: response.pay_address,
-      ticket_data: req.body,
-    };
 
-    // Read the existing array from the file
-    const filePath = 'data.js';
-    // Modify the array (add a new item, for example)
-    myArray.push(data);
+    if (response?.status) {
+      const data = {
+        customer_did: customer_did,
+        wallet_address: response?.data?.pay_address,
+        ticket_data: req.body,
+      };
 
-    // Convert the modified array back to a JavaScript code string
-    const arrayCode = `module.exports = ${JSON.stringify(myArray, null, 2)};`;
+      // Read the existing array from the file
+      const filePath = 'data.js';
+      // Modify the array (add a new item, for example)
+      myArray.push(data);
 
-    // Write the updated array code back to the file
-    fs.writeFile(filePath, arrayCode, 'utf-8', (err) => {
-      if (err) {
-        console.error('Error writing to file:', err);
-      } else {
-        console.log('Array has been updated in', filePath);
-      }
-    });
+      // Convert the modified array back to a JavaScript code string
+      const arrayCode = `module.exports = ${JSON.stringify(myArray, null, 2)};`;
 
-    return res.status(200).json({ status: 'success', wallet: response });
+      // Write the updated array code back to the file
+      fs.writeFile(filePath, arrayCode, 'utf-8', (err) => {
+        if (err) {
+          console.error('Error writing to file:', err);
+        } else {
+          console.log('Array has been updated in', filePath);
+        }
+      });
+
+      return res.status(200).json({ status: 'success', wallet: response })
+
+    } else {
+      return res.status(400).json({ status: 'failed', error: 'wallet not generated' })
+    }
+
   } catch (error) {
     res.status(400).json({ status: 'failed', error: error });
   }
