@@ -1,9 +1,11 @@
 import axios from "axios"
 import { nowPaymentUrl } from "../utils/constants.js"
 import dotenv from 'dotenv';
-import CryptoJS from "crypto-js";
+
 import { signTicketVerifiableCredential } from "./verifiable.credentials.js";
 import { myArray } from "../data.js";
+
+const crypto = require('crypto')
 
 dotenv.config();
 
@@ -51,18 +53,10 @@ export const generatePaymentAddress = async (amount) => {
 
 
 //For Verifying webhooks
-
 export const generateSignature = async (data) => {
-  // Convert the IPN secret key to a WordArray
-  const secretKey = CryptoJS.enc.Utf8.parse(process.env.IPN_SECRET_KEY);
-
-  // Sort the data dictionary by keys and convert to a JSON string
-  const sortedData = JSON.stringify(data, Object.keys(data).sort(), 2);
-
-  // Calculate the HMAC-SHA512 signature
-  const hmac = CryptoJS.HmacSHA512(sortedData, secretKey);
-  const signature = CryptoJS.enc.Hex.stringify(hmac);
-
+  const hmac = crypto.createHmac('sha512', process.env.IPN_SECRET_KEY);
+  hmac.update(JSON.stringify(data, Object.keys(data).sort()));
+  const signature = hmac.digest('hex');
   return signature;
 
 }
