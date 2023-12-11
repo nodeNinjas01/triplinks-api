@@ -20,6 +20,6 @@ export const sendEmail = async (receiver, vc) => {
     text: vc,
     html: `<b>Hello ${receiver}</b>`
   })
-
+  console.log('mess sent to', receiver);
   return message.messageId
 }
