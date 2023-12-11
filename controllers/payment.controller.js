@@ -56,21 +56,18 @@ export const generatePaymentAddress = async (amount) => {
 //For Verifying webhooks
 const ipnSecret = process.env.IPN_SECRET_KEY;  // Replace with your actual IPN secret
 
-export const generateSignature = (params) => {
-  // Step 4: Sort all the parameters in alphabetical order
-  const sortedParams = {};
-  Object.keys(params).sort().forEach(key => {
-    sortedParams[key] = params[key];
-  });
+export const generateSignature = (data) => {
 
-  // Step 5: Convert parameters to a string using JSON.stringify and Object.keys
-  const sortedParamsString = JSON.stringify(sortedParams, Object.keys(sortedParams).sort());
+  // Step 1: Convert the IPN secret key to a Buffer
+  const secretKey = Buffer.from(ipnSecret, 'utf-8');
 
-  // Step 6: Sign the string with an IPN-secret key using HMAC and sha-512
-  const hmac = crypto.createHmac('sha512', ipnSecret);
-  hmac.update(sortedParamsString);
+  // Step 2: Sort the data dictionary by keys and convert to a JSON string
+  const sortedData = JSON.stringify(data, Object.keys(data).sort(), 2);
+
+  // Step 3: Calculate the HMAC-SHA512 signature
+  const hmac = crypto.createHmac('sha512', secretKey);
+  hmac.update(sortedData, 'utf-8');
   const signature = hmac.digest('hex');
-
   return signature;
 };
 
