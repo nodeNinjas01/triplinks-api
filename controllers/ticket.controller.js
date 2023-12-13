@@ -312,7 +312,7 @@ export const generateWallet = async (req, res) => {
     //Prepare data that will be written to data.json
     const data = {
       customer_did: customer_did,
-      wallet_address: response.pay_address,
+      wallet_address: response?.data?.pay_address,
       ticket_data: req.body,
     };
 

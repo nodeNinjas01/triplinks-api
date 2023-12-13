@@ -86,7 +86,6 @@ export const nowPaymentWebhook = async (data, headers, did) => {
   // Check if the data.pay_adress is contained in myArray
 
   for (const item of myArray) {
-
     if (item?.wallet_address == data?.pay_address) {
       console.log(myArray.length);
       if (JSON.stringify(headers['x-nowpayments-sig'])) {
