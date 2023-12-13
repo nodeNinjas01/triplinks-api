@@ -310,37 +310,30 @@ export const generateWallet = async (req, res) => {
     const { price_amount, customer_did } = req.body;
     const response = await generatePaymentAddress(price_amount);
     //Prepare data that will be written to data.json
+    const data = {
+      customer_did: customer_did,
+      wallet_address: response.pay_address,
+      ticket_data: req.body,
+    };
 
-    if (response?.status) {
-      const data = {
-        customer_did: customer_did,
-        wallet_address: response?.data?.pay_address,
-        ticket_data: req.body,
-      };
+    // Read the existing array from the file
+    const filePath = 'data.js';
+    // Modify the array (add a new item, for example)
+    myArray.push(data);
 
-      // Read the existing array from the file
-      const filePath = 'data.js';
-      // Modify the array (add a new item, for example)
-      myArray.push(data);
+    // Convert the modified array back to a JavaScript code string
+    const arrayCode = `module.exports = ${JSON.stringify(myArray, null, 2)};`;
 
-      // Convert the modified array back to a JavaScript code string
-      const arrayCode = `module.exports = ${JSON.stringify(myArray, null, 2)};`;
+    // Write the updated array code back to the file
+    fs.writeFile(filePath, arrayCode, 'utf-8', (err) => {
+      if (err) {
+        console.error('Error writing to file:', err);
+      } else {
+        console.log('Array has been updated in', filePath);
+      }
+    });
 
-      // Write the updated array code back to the file
-      fs.writeFile(filePath, arrayCode, 'utf-8', (err) => {
-        if (err) {
-          console.error('Error writing to file:', err);
-        } else {
-          console.log('Array has been updated in', filePath);
-        }
-      });
-
-      return res.status(200).json({ status: 'success', wallet: response })
-
-    } else {
-      return res.status(400).json({ status: 'failed', error: 'wallet not generated' })
-    }
-
+    return res.status(200).json({ status: 'success', wallet: response });
   } catch (error) {
     res.status(400).json({ status: 'failed', error: error });
   }
@@ -366,8 +359,9 @@ export const nowPaymentWebhookFunction = async (req, res) => {
  * @route   GET /api/v1/publish-ticket
  * @access  Private
  */
+
 export const login = async (req, res, next) => {
-  const { phoneNumber, passphrase } = req.body;
+  const { phoneNumber, passphrase, customer_did } = req.body;
 
   try {
     const response = await web5.dwn.records.query({
@@ -379,70 +373,57 @@ export const login = async (req, res, next) => {
         },
       },
     });
-    // console.log(response);
+
     let user;
     let data;
+
     if (response.status.code === 200 && response.records.length > 0) {
-      console.log(response.status.code);
       user = await Promise.all(
         response.records.map(async (record) => {
           data = await record.data.json();
-          // console.log(record);
-          if (data) {
-            return {
-              ...data,
-              recordId: record.id,
-              did,
-            };
+          // console.log(data, 'backend data');
+
+          if (data && data.customer_did === customer_did) {
+            if (data.phoneNumber === phoneNumber && data.passphrase === passphrase) {
+              return { status: 200, response: { status: true, user: data.phoneNumber, did: data.customer_did } };
+            } else {
+              return { status: 400, response: { error: "user name and passphrase is not correct" } };
+            }
           }
         })
       );
-      if (user) {
-        if (
-          user[0].phoneNumber !== phoneNumber ||
-          user[0].passphrase !== passphrase
-        ) {
-          return next(new ErrorResponse('wrong phone number or pass phrase', 403));
-        }
+
+      // Find the first non-null user response
+      const validUserResponse = user.find((u) => u);
+
+      if (validUserResponse) {
+        return res.status(validUserResponse.status).json(validUserResponse.response);
       }
     }
 
-    if (!user) {
-      const userDid = await DidKeyMethod.create();
-      const userProtocol = defineNewProtocol();
-      try {
-        const { record, status } = await web5.dwn.records.create({
-          data: {
-            phoneNumber: phoneNumber,
-            passphrase: passphrase,
-            did: userDid.did,
-          },
-          message: {
-            protocol: userProtocol.protocol,
-            protocolPath: 'userTickets',
-            dataFormat: 'application/json',
-            schema: userProtocol.types.publishedTickets.schema,
-            recipient: appDid,
-          },
-        });
+    const userProtocol = defineNewProtocol();
 
-        if (record) {
-          const { status } = await record.send(appDid);
-          console.log(status);
-        }
+    const { record, status } = await web5.dwn.records.create({
+      data: {
+        phoneNumber: phoneNumber,
+        passphrase: passphrase,
+        customer_did: customer_did,
+      },
+      message: {
+        protocol: userProtocol.protocol,
+        protocolPath: 'userTickets',
+        dataFormat: 'application/json',
+        schema: userProtocol.types.publishedTickets.schema,
+      },
+    });
 
-        data = await record.data.json();
-      } catch (error) {
-        return next(new ErrorResponse("Couldn't write record: " + error, 400));
-      }
-    }
-
-    res.status(201).json({
+    data = await record.data.json();
+    return res.status(201).json({
       success: true,
-      user: user ? user[0].phoneNumber : data.phoneNumber,
-      did: user ? user[0].did : data.did,
+      user: data.phoneNumber,
+      did: data.customer_did,
     });
   } catch (error) {
-    return next(new ErrorResponse(error, 400));
+    return res.status(400).json({ error: error.message || "An error occurred" });
   }
 };
