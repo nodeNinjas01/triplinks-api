@@ -78,6 +78,8 @@ export const generateSignature = (data) => {
 // If the sigining key are same, then we can go ahead with siginging a vc for the user
 
 export const nowPaymentWebhook = async (data, headers, did) => {
+  console.log('webhook called');
+  console.log(myArray.length);
 
   // const sig = await generateSignature(data)
 
